@@ -54,6 +54,19 @@ Auxiliary Analyzers](https://aclweb.org/anthology/P/P15/P15-2141.pdf). In Procee
 }
 ```
 # Updates
+
+## Custom updates (YP)
+
+Before running anything, source the script which sets environment variables:
+```bash
+
+source ./scripts/set_env.sh
+
+```
+This sets the variables which are used throughout the code.
+
+## Official updates
+
 09-2016 We have included the retrain instruction.
 
 08-2016 We have released new model trained on bigger dataset.
