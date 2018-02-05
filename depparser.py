@@ -63,7 +63,7 @@ class StanfordDepParser(DepParser):
        
         # if CoreNLP libraries are in a different directory,
         # change the corenlp_path variable to point to them
-        stanford_path = "/home/j/llc/cwang24/R_D/AMRParsing/stanfordnlp/stanford-parser/"
+        stanford_path = os.environ['STANFORD_PARSER_PATH']
         
         java_path = "java"
         classname = "edu.stanford.nlp.parser.lexparser.LexicalizedParser"
