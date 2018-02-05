@@ -67,3 +67,7 @@ scripts/*~
 *.gz
 *.zip
 log/
+
+
+# Added by Yevgeniy Puzikov
+.idea/
