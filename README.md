@@ -57,13 +57,17 @@ Auxiliary Analyzers](https://aclweb.org/anthology/P/P15/P15-2141.pdf). In Procee
 
 ## Custom updates (YP)
 
-Before running anything, source the script which sets environment variables:
-```bash
+* Before running anything, source the script which sets environment variables:
+    
+    ```bash
+    
+    source ./scripts/set_env.sh
+    
+    ```
+    This sets the variables which are used throughout the code.
+    
+* Changed the config.sh script to include the correct version of the CoreNLP tool.
 
-source ./scripts/set_env.sh
-
-```
-This sets the variables which are used throughout the code.
 
 ## Official updates
 
