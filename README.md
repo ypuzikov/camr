@@ -57,7 +57,8 @@ Auxiliary Analyzers](https://aclweb.org/anthology/P/P15/P15-2141.pdf). In Procee
 
 ## Custom updates (YP)
 
-* Before running anything, source the script which sets environment variables:
+* Before running anything, source the script which 
+sets environment variables:
     
     ```bash
     
@@ -66,15 +67,22 @@ Auxiliary Analyzers](https://aclweb.org/anthology/P/P15/P15-2141.pdf). In Procee
     ```
     This sets the variables which are used throughout the code.
     
-* Changed the config.sh script to include the correct version of the CoreNLP tool.
+* Changed the `./config.sh` script to include the correct 
+version of the CoreNLP tool.
 
+* Changed the `./stanfordnlp/default.properties` file 
+by adding the 'ssplit.eolonly=true' option. 
+Previously, CoreNLP would split sentences, 
+even if they constitute a text for one AMR. 
+This resulted in a mismatch between the number of AMRs 
+and processed textual descriptions.
 
 ## Official updates
 
 09-2016 We have included the retrain instruction.
 
-08-2016 We have released new model trained on bigger dataset.
-
+08-2016 We have  new model trained on bigger dataset.
+released
 # Dependencies
 
 First download the project:
