@@ -1,3 +1,6 @@
+#!/bin/bash
+
+DIR=$(dirname "$(readlink -f "$0")")
 
 source ./set_env.sh
 

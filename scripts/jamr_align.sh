@@ -1,6 +1,8 @@
 #!/bin/bash
 
-source ./set_env.sh
+DIR=$(dirname "$(readlink -f "$0")")
+
+source $DIR/set_env.sh
 
 #### Config ####
 ${JAMR_HOME}/scripts/config.sh
