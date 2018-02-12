@@ -12,6 +12,6 @@
 # Set these paths before running anything!
 # The scripts above are modified to take into account the paths you provide.
 
-CORENLP_PATH='$HOME/projects/camr/stanfordnlp/stanford-corenlp-full-2015-04-20'
-STANFORD_PARSER_PATH='$HOME/projects/camr/stanfordnlp/stanford-parser-full-2014-01-04'
-JAMR_HOME='$HOME/projects/jamr'
+CORENLP_PATH=$HOME/projects/camr/stanfordnlp/stanford-corenlp-full-2015-04-20
+STANFORD_PARSER_PATH=$HOME/projects/camr/stanfordnlp/stanford-parser-full-2014-01-04
+JAMR_HOME=$HOME/projects/jamr
