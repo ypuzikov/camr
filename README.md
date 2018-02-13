@@ -77,6 +77,14 @@ even if they constitute a text for one AMR.
 This resulted in a mismatch between the number of AMRs 
 and processed textual descriptions.
 
+* To install bllipparser on Anaconda environments, run:
+
+```bash
+
+conda install -c steven_c bllipparser
+
+```
+
 ## Official updates
 
 09-2016 We have included the retrain instruction.
