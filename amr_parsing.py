@@ -342,6 +342,7 @@ def main():
         best_rscore = 0.0
         best_model = None
         best_iter = 1
+        model_name = os.path.split(os.path.abspath(args.model))[-1]
         for iter in xrange(1,args.iterations+1):
             print >> experiment_log, "shuffling training instances"
             random.shuffle(train_instances)
@@ -354,7 +355,7 @@ def main():
             if args.dev:
                 print >> experiment_log ,"Result on develop set:"                
                 _,parsed_amr = parser.parse_corpus_test(dev_instances)
-                parsed_suffix = args.section+'.'+args.model.split('.')[-1]+'.'+str(iter)+'.parsed'
+                parsed_suffix = '%s.%d.parsed' % (model_name, iter)
                 write_parsed_amr(parsed_amr,dev_instances,args.dev,parsed_suffix)
                 if args.smatcheval:
                     smatch_path = "./smatch_2.0.2/smatch.py"
