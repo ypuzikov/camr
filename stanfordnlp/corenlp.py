@@ -330,17 +330,24 @@ class StanfordCoreNLP(object):
        
         # if CoreNLP libraries are in a different directory,
         # change the corenlp_path variable to point to them
-        corenlp_path = os.path.relpath(__file__).split('/')[0]+"/stanford-corenlp-full-2015-04-20/"
-        #corenlp_path = "stanford-corenlp-full-2013-06-20/"
+        corenlp_path = os.environ["CORENLP_PATH"]
         
         java_path = "java"
         classname = "edu.stanford.nlp.pipeline.StanfordCoreNLP"
         # include the properties file, so you can change defaults
         # but any changes in output format will break parse_parser_results()
-        props = "-props "+ os.path.relpath(__file__).split('/')[0]+"/default.properties"
-        
+        CORENLP_PROPERTIES_PATH = os.environ.get("CORENLP_PROPERTIES_PATH", None)
+        if CORENLP_PROPERTIES_PATH is None:
+            sys.exit()
+            CORENLP_PROPERTIES_PATH = os.path.relpath(__file__).split('/')[0] + "/default.properties"
+            print("WARNING: CORENLP_PROPERTIES_PATH not set!")
+            print("WARNING: Make sure you are running CAMR on original AMR data!")
+            print("WARNING: To run on ISI-mapped data, modify and source ./scripts/set_env.sh")
+
+        props = "-props "+ os.path.abspath(CORENLP_PROPERTIES_PATH)
+
         # add and check classpaths
-        jars = [corenlp_path + jar for jar in jars]
+        jars = [os.path.join(corenlp_path, jar) for jar in jars]
         for jar in jars:
             if not os.path.exists(jar):
                 print "Error! Cannot locate %s" % jar

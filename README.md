@@ -79,11 +79,14 @@ and processed textual descriptions.
 
 * To install bllipparser on Anaconda environments, run:
 
-```bash
+    ```bash
+    
+    conda install -c steven_c bllipparser
+    
+    ```
 
-conda install -c steven_c bllipparser
-
-```
+* To be able to run on ISI2JAMR-mapped data, make sure to set the CoreNLP properties file.
+Specifically, set "tokenize.whitespace=true"
 
 ## Official updates
 

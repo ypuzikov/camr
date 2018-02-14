@@ -12,6 +12,16 @@
 # Set these paths before running anything!
 # The scripts above are modified to take into account the paths you provide.
 
-CORENLP_PATH=$HOME/projects/camr/stanfordnlp/stanford-corenlp-full-2015-04-20
-STANFORD_PARSER_PATH=$HOME/projects/camr/stanfordnlp/stanford-parser-full-2014-01-04
-JAMR_HOME=$HOME/projects/jamr
+export CORENLP_PATH=$HOME/projects/amr/camr/stanfordnlp/stanford-corenlp-full-2015-04-20
+export STANFORD_PARSER_PATH=$HOME/projects/amr/camr/stanfordnlp/stanford-parser-full-2014-01-04
+export JAMR_HOME=$HOME/projects/amr/jamr
+
+# There is one path variable which has to be changed depending on
+# whether we run original AMR data or the one mapped from ISI-aligned data
+export CORENLP_PROPERTIES_PATH=$HOME/projects/amr/camr/stanfordnlp/default.properties
+
+# for our experiments with mapping ISI alignments to JAMR alignments,
+# this has to be changed to a different properties file
+# the only property which has changed is: tokenize.whitespace=true
+#export CORENLP_PROPERTIES_PATH=$HOME/projects/amr/camr/stanfordnlp/isi2jamr.properties
+
