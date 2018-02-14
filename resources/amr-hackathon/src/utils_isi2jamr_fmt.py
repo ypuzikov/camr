@@ -82,7 +82,7 @@ class ISI2JAMRAMRPrinter(AMRPrinter):
                 # 1. Write comment string
                 comment = comment_list[idx]
                 comment['snt'] = comment['tok']
-                augmented_comment = '\n'.join([':: %s %s' % (k, v) for k, v in comment.items()])
+                augmented_comment = '\n'.join(['# ::%s %s' % (k, v) for k, v in comment.items()])
                 outfile.write('%s\n' % augmented_comment)
 
                 # 2. Write alignments
