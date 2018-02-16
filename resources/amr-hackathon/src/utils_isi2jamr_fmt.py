@@ -1,7 +1,7 @@
 import codecs
 import logging
 import re
-import sys
+import argparse
 from collections import OrderedDict
 
 from amr import AMR, AMRError
@@ -63,7 +63,7 @@ class ISI2JAMRAMRPrinter(AMRPrinter):
 
         return (comment_list, amr_list)
 
-    def write_JAMR(self, comment_list, amr_list, jamr_amr_fname):
+    def write_JAMR_full(self, comment_list, amr_list, jamr_amr_fname):
 
         logger.info('Writing to file: %s' % jamr_amr_fname)
 
@@ -107,19 +107,69 @@ class ISI2JAMRAMRPrinter(AMRPrinter):
 
         logger.info('Done')
 
+    def write_JAMR_alignments(self, comment_list, amr_list, jamr_amr_fname):
+
+        logger.info('Writing to file: %s' % jamr_amr_fname)
+
+        with codecs.open(jamr_amr_fname, 'w', encoding='utf-8') as outfile:
+            for idx, isi_amr_str in enumerate(amr_list):
+                try:
+                    amr_obj = AMR(isi_amr_str)
+                except AMRError:
+                    warning_msg = 'WARNING: the instance does not comply with AMR specification!'
+                    expl_msg = 'This might be caused by reusing the same var name for several concepts:'
+                    print(warning_msg)
+                    print(expl_msg)
+                    print('%s\n' % isi_amr_str)
+                    continue
+
+                # 1. Write comment string
+                comment = comment_list[idx]
+                comment['snt'] = comment['tok']
+                augmented_comment = '\n'.join(['# ::%s %s' % (k, v) for k, v in comment.items()])
+                outfile.write('%s\n' % augmented_comment)
+
+                # 2. Write alignments
+                ga, relations = self.get_gorn_addr_map(amr_obj)
+                full_alignment_info = self.get_amr_alignment_fullinfo(ga, relations)
+                outfile.write('%s\n' % full_alignment_info['alignment'])
+
+                # 3. Write AMR string
+                amr_str_wo_alignments = amr_obj.__str__(alignments=False)
+                outfile.write('%s\n\n' % amr_str_wo_alignments)
+
+        logger.info('Done')
+
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--input',
+                        help='Input: ISI-aligned AMR file')
+    parser.add_argument('-o', '--output',
+                        help='Output: ISI-aligned AMR file, but aligned according to the format of JAMR Aligner')
+
+    parser.add_argument('-m', '--mode',
+                        help='Mode, specifying the amount of alignment info you want to have in the output.'
+                             'Use "full" if you want to have the ::alignment, ::node, ::root and ::edge strings.'
+                             'Use "align", if all you need is the :: alignment string in the output file.',
+                        choices=['full', 'align'], default='align')
+
+
+    args = parser.parse_args()
+    return args
+
 
 if __name__ == '__main__':
 
-    argvs = sys.argv
-    input_file = sys.argv[1]
+    argvs = parse_args()
 
-    if len(argvs) == 2:
-        output_file = '%s.jamr_fmt' % input_file
-    elif len(argvs) == 3:
-        output_file = sys.argv[2]
-    else:
-        raise RuntimeError('Specify input and output (optional) files!')
+    input_file = argvs.input
+    output_file = argvs.output
+    mode = argvs.mode
 
     printer = ISI2JAMRAMRPrinter()
     comments, amrs = printer.readISI(input_file)
-    printer.write_JAMR(comments, amrs, output_file)
+
+    if mode == 'align':
+        printer.write_JAMR_alignments(comments, amrs, output_file)
+    else:
+        printer.write_JAMR_full(comments, amrs, output_file)
