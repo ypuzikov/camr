@@ -396,7 +396,8 @@ def main():
         parser = Parser(model=model,oracle_type=DET_T2G_ORACLE_ABT,action_type=args.actionset,verbose=args.verbose,elog=experiment_log)
         print >> experiment_log ,"BEGIN PARSING"
         span_graph_pairs,results = parser.parse_corpus_test(test_instances)
-        parsed_suffix = '%s.%s.parsed'%(args.section,args.model.split('.')[-2])
+        model_name = os.path.split(os.path.abspath(args.model))[-1]
+        parsed_suffix = '%s.parsed' % (model_name)
         write_parsed_amr(results,test_instances,amr_file,suffix=parsed_suffix)
         #write_span_graph(span_graph_pairs,test_instances,amr_file,suffix='spg.50')
         ################

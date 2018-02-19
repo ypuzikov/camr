@@ -130,10 +130,17 @@ class Model():
 
                 if isinstance(d,int):
                     dnode = gold_nodes[d]
-                    d_span_wds = [tok['lemma'] for tok in sent_tokens if tok['id'] in range(dnode.start,dnode.end)] 
-                    d_span_ne = sent_tokens[d]['ne']
+                    d_span_wds = [tok['lemma'] for tok in sent_tokens if tok['id'] in range(dnode.start,dnode.end)]
+                    try:
+                        d_span_ne = sent_tokens[d]['ne']
+                    except IndexError:
+                        print("It seems that this instance was not processed correctly!")                        
+                        print("Instance ID: ", inst.sentID)
+                        print("Hint: check the corresponding *.prp file for dangling ^M symbols in the middle of this instance.")                            
+                        break
+                        
                     d_entity_tag = gold_graph.get_node_tag(d)
-                    #if len(d_span_wds) > 1:  
+                    #if len(d_span_wds) > 1:
                     #    for dwd in d_span_wds:
                     #        self.token_to_concept_table[dwd].add(d_entity_tag)
                     if d_span_ne not in ['O','NUMBER']:                    

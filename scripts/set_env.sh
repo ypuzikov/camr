@@ -18,7 +18,7 @@ export JAMR_HOME=$HOME/projects/amr/jamr
 
 # There is one path variable which has to be changed depending on
 # whether we run original AMR data or the one mapped from ISI-aligned data
-export CORENLP_PROPERTIES_PATH=$HOME/projects/amr/camr/stanfordnlp/default.properties
+export CORENLP_PROPERTIES_PATH=$HOME/projects/amr/camr/stanfordnlp/isi2jamr.properties
 
 # for our experiments with mapping ISI alignments to JAMR alignments,
 # this has to be changed to a different properties file
