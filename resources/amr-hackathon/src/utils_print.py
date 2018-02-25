@@ -14,7 +14,7 @@ NULL_ALIGNMENT = ('', '')
 
 class AMRPrinter(object):
 
-    def get_concept2alignment_dict(self, amr_graph):
+    def get_concept2spans_alignment_dict(self, amr_graph):
         """
         Use an AMR object to generate a dictionary of the following format:
 
@@ -22,7 +22,7 @@ class AMRPrinter(object):
         - value: (start, end) tuple
         """
 
-        concept_tokid_pairs = {}
+        concept_tokid_pairs = OrderedDict()
         for triple, alignment in amr_graph.alignments().items():
             # alignment has the following format: 'e.d',
             # where 'd' is the positional idx of an aligned token (starting with 0)
@@ -36,7 +36,7 @@ class AMRPrinter(object):
             start = int(tokids[0])
             end = start + 1  # ISI alignments are token-based -> off-set by 1
             concept = self.get_node_concept(triple[2], amr_graph)
-            concept_tokid_pairs[concept] = (str(start), str(end))
+            concept_tokid_pairs.setdefault(concept, []).append((str(start), str(end)))
 
         return concept_tokid_pairs
 
@@ -59,6 +59,37 @@ class AMRPrinter(object):
 
         return concept
 
+    def get_alignment_from_concept(self, concept, alignments_dict):
+        """
+        Given an AMR concept and a dictionary with concepts as keys and lists of spans as values,
+        retrieve the span. Considers the cases where the
+        :param concept: AMR concept
+        :param alignments_dict: a dictionary with mappings: concept -> [(start,end), (start, end), ...]
+        :return: a tuple of the form (start, end), both being strings.
+        """
+
+        if concept in alignments_dict:
+            # some node with this concept has an alignment
+            p_node_concept_alignments = alignments_dict[concept]
+
+            if len(p_node_concept_alignments) > 0:
+                # there is at least one node with this concept
+                p_node_alignment = p_node_concept_alignments.pop(0)
+
+            else:
+                # we have encounterd a node with the same concept before,
+                # however, the current node (also having the same concept) is unaligned
+                # hence, we need to remove the key from the OrderedDict and assign NULL ALLIGNMENT to the
+                # current node
+                del alignments_dict[concept]
+                p_node_alignment = NULL_ALIGNMENT
+
+        else:
+            # this node is unaligned
+            p_node_alignment = NULL_ALIGNMENT
+
+        return p_node_alignment
+
     def get_gorn_addr_map(self, amr_graph):
         """
         Main method which generates a Gorn address map for an amr.AMR object.
@@ -67,61 +98,52 @@ class AMRPrinter(object):
         key = amr.Var || AMRConstant || AMRString || AMRNumber
         value = AMRNode named tuple: (gord_addr_id, concept, (start_token, end_token))
 
-        Note that ISI alignments are token-based, hence splitting alignment to 'start' and 'end'
-        does not make sense, unless we want to make them compatible with
-        the JAMR Aligner format (which is the case).
+        Note that ISI alignments are token-based, so splitting alignment to 'start' and 'end'
+        does not make sense in general. However, we want to make them compatible with
+        the JAMR Aligner format => splitting.
         """
 
-        triples = amr_graph.triples()[1:]  # excluding the first one (which is TOP)
-        alignments = self.get_concept2alignment_dict(amr_graph)
+        # relation triples in the order of occurence in AMR string
+        triples = amr_graph.triples()[1:]  # excluding the first one (which is meta-node, 'TOP')
+
+        # alignments in the order of occurence in AMR string
+        alignments = self.get_concept2spans_alignment_dict(amr_graph)
         gorn_address = OrderedDict()
 
         # store the AMRNode info for the root node
-        p_node = triples.pop(0)[0]
-        p_node_address = "0"
-        p_node_concept = self.get_node_concept(p_node, amr_graph)
-        p_node_alignment = alignments.get(p_node_concept, NULL_ALIGNMENT)
-        gorn_address[p_node] = AMRNode(p_node_address, p_node_concept, *p_node_alignment)
+        root_node = triples.pop(0)[0]
+        root_node_address = "0"
+        root_node_concept = self.get_node_concept(root_node, amr_graph)
+        root_node_alignment = self.get_alignment_from_concept(root_node_concept, alignments)
+        gorn_address[root_node] = AMRNode(root_node_address, root_node_concept, *root_node_alignment)
 
         relations = []
-        sibling_cnt = -1
+        children_cnts = {}
 
         # for each triple
-        for h, rel, curr_node in triples:
+        for parent, rel, child in triples:
             # skipping the one which sets a relation between a Var and Concept
             if rel == ':instance-of':
                 continue
 
-            # if the child node is not in the gorn_address map already
-            # otherwise need to skip: this means we have reentrance situation
-            if curr_node not in gorn_address:
-                relations.append((h, rel, curr_node))
-                # increase the count if the parent of the current node is the same as for the previous one
-                # this means we are processing a node which has a sibling
-                sibling_cnt = sibling_cnt + 1 if h == p_node else 0
-                p_node = self.gorn_map_child_node(amr_graph, h, sibling_cnt, curr_node, gorn_address, alignments)
+            # check if the child node is not in the gorn_address map already
+            # if it is, we need to skip -- this means we have reentrance situation
+            if child not in gorn_address:
+                relations.append((parent, rel, child))
+                children_cnts[parent] = children_cnts.get(parent,-1) + 1
+
+                # to assign a Gorn address to a node, two things are needed:
+                # 1) Gorn address of the parent node
+                # 2) number of siblings processed so far
+                parent_id = gorn_address[parent].id
+                child_address = "%s.%d" % (parent_id, children_cnts[parent])
+
+                # add the child node to the Gorn address map
+                child_concept = self.get_node_concept(child, amr_graph)
+                child_alignment = self.get_alignment_from_concept(child_concept, alignments)
+                gorn_address[child] = AMRNode(child_address, child_concept, *child_alignment)
 
         return gorn_address, relations
-
-    def gorn_map_child_node(self, amr_graph, parent_node, sibling_count, this_node, gorn_address, alignments):
-        """
-        Aux method used in get_gorn_addr_map() method (above).
-
-        To assign a Gorn address to a node, two things are needed:
-        1) Gorn address of the parent node
-        2) number of siblings processed so far
-
-        """
-
-        # note that gorn_address[parent_node] returns 3 elements;
-        # we need only the 1st (i.e., Gorn addres of the parent node)
-        parent_id = gorn_address[parent_node][0]
-        this_address = "%s.%d" % (parent_id, sibling_count)
-        this_concept = self.get_node_concept(this_node, amr_graph)
-        this_alignment = alignments.get(this_concept, NULL_ALIGNMENT)
-        gorn_address[this_node] = AMRNode(this_address, this_concept, *this_alignment)
-
-        return parent_node
 
     @staticmethod
     def gen_amr_alignment_string(gorn_addr):

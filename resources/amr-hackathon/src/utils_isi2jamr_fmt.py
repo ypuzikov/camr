@@ -7,9 +7,6 @@ from collections import OrderedDict
 from amr import AMR, AMRError
 from utils_print import AMRPrinter
 
-logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.DEBUG)
-
 
 class ISI2JAMRAMRPrinter(AMRPrinter):
 
@@ -23,7 +20,7 @@ class ISI2JAMRAMRPrinter(AMRPrinter):
 
         :return:
         """
-        logger.info('Reading file: %s' % amr_fname)
+        logging.info('Reading file: %s' % amr_fname)
 
         amrfile = codecs.open(amr_fname, 'r', encoding='utf-8')
         comment_regex = re.compile("::([^:\s]+)\s(((?!::).)*)")
@@ -48,9 +45,11 @@ class ISI2JAMRAMRPrinter(AMRPrinter):
                     amr_string = ''
                     comment = {}
 
-                # TODO: check if needed!
                 else:
+                    # TODO: check if needed!
                     comment = {}
+                    raise NotImplementedError()
+
             else:
                 amr_string += line.strip() + ' '
 
@@ -59,24 +58,30 @@ class ISI2JAMRAMRPrinter(AMRPrinter):
             amr_list.append(amr_string)
         amrfile.close()
 
-        logger.info('Done')
+        logging.info('Done')
 
         return (comment_list, amr_list)
 
-    def write_JAMR_full(self, comment_list, amr_list, jamr_amr_fname):
+    def write_alignment_full(self, comment_list, amr_list, jamr_amr_fname):
+        """
+        Write AMR string and alignments to a file.
+        The alignment info is full -- includes the ::alignment, ::node, ::root and ::edge components
+        :param comment_list: list of comment strings
+        :param amr_list: list of AMR strings in ISI format
+        :param jamr_amr_fname: output file name
+        :return:
+        """
 
-        logger.info('Writing to file: %s' % jamr_amr_fname)
+        logging.info('Writing to file: %s' % jamr_amr_fname)
 
         with codecs.open(jamr_amr_fname, 'w', encoding='utf-8') as outfile:
             for idx, isi_amr_str in enumerate(amr_list):
                 try:
                     amr_obj = AMR(isi_amr_str)
                 except AMRError:
-                    warning_msg = 'WARNING: the instance does not comply with AMR specification!'
-                    expl_msg = 'This might be caused by reusing the same var name for several concepts:'
-                    print(warning_msg)
-                    print(expl_msg)
-                    print('%s\n' % isi_amr_str)
+                    logging.warning('WARNING: the instance does not comply with AMR specification!')
+                    logging.warning('This might be caused by reusing the same var name for several concepts:')
+                    logging.warning('%s\n' % isi_amr_str)
                     continue
 
                 # 1. Write comment string
@@ -105,22 +110,28 @@ class ISI2JAMRAMRPrinter(AMRPrinter):
                 amr_str_wo_alignments = amr_obj.__str__(alignments=False)
                 outfile.write('%s\n\n' % amr_str_wo_alignments)
 
-        logger.info('Done')
+        logging.info('Done')
 
-    def write_JAMR_alignments(self, comment_list, amr_list, jamr_amr_fname):
+    def write_alignment_basic(self, comment_list, amr_list, jamr_amr_fname):
+        """
+        Write AMR string and alignments to a file.
+        The alignment info is basic -- only ::alignment string (w/o ::node, ::root or ::edge components)
+        :param comment_list: list of comment strings
+        :param amr_list: list of AMR strings in ISI format
+        :param jamr_amr_fname: output file name
+        :return:
+        """
 
-        logger.info('Writing to file: %s' % jamr_amr_fname)
+        logging.info('Writing to file: %s' % jamr_amr_fname)
 
         with codecs.open(jamr_amr_fname, 'w', encoding='utf-8') as outfile:
             for idx, isi_amr_str in enumerate(amr_list):
                 try:
                     amr_obj = AMR(isi_amr_str)
                 except AMRError:
-                    warning_msg = 'WARNING: the instance does not comply with AMR specification!'
-                    expl_msg = 'This might be caused by reusing the same var name for several concepts:'
-                    print(warning_msg)
-                    print(expl_msg)
-                    print('%s\n' % isi_amr_str)
+                    logging.warning('WARNING: the instance does not comply with AMR specification!')
+                    logging.warning('This might be caused by reusing the same var name for several concepts:')
+                    logging.warning('%s\n' % isi_amr_str)
                     continue
 
                 # 1. Write comment string
@@ -138,7 +149,7 @@ class ISI2JAMRAMRPrinter(AMRPrinter):
                 amr_str_wo_alignments = amr_obj.__str__(alignments=False)
                 outfile.write('%s\n\n' % amr_str_wo_alignments)
 
-        logger.info('Done')
+        logging.info('Done')
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -150,8 +161,8 @@ def parse_args():
     parser.add_argument('-m', '--mode',
                         help='Mode, specifying the amount of alignment info you want to have in the output.'
                              'Use "full" if you want to have the ::alignment, ::node, ::root and ::edge strings.'
-                             'Use "align", if all you need is the :: alignment string in the output file.',
-                        choices=['full', 'align'], default='align')
+                             'Use "basic", if all you need is the ::alignment string in the output file.',
+                        choices=['full', 'basic'], default='basic')
 
 
     args = parser.parse_args()
@@ -160,6 +171,7 @@ def parse_args():
 
 if __name__ == '__main__':
 
+    logging.basicConfig(level=logging.DEBUG)
     argvs = parse_args()
 
     input_file = argvs.input
@@ -169,7 +181,7 @@ if __name__ == '__main__':
     printer = ISI2JAMRAMRPrinter()
     comments, amrs = printer.readISI(input_file)
 
-    if mode == 'align':
-        printer.write_JAMR_alignments(comments, amrs, output_file)
+    if mode == 'basic':
+        printer.write_alignment_basic(comments, amrs, output_file)
     else:
-        printer.write_JAMR_full(comments, amrs, output_file)
+        printer.write_alignment_full(comments, amrs, output_file)
