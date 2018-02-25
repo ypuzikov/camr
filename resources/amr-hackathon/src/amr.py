@@ -18,7 +18,7 @@ TODO: Include the smatch evaluation code
 from __future__ import print_function
 
 import re
-from collections import defaultdict, Counter
+from collections import defaultdict, Counter, OrderedDict
 
 from nltk.parse import DependencyGraph
 from parsimonious.exceptions import ParseError
@@ -320,8 +320,8 @@ class AMR(DependencyGraph):
         self._v2c = {}
         self._triples = []
         self._constants = set()
-        self._alignments = {}
-        self._role_alignments = {}
+        self._alignments = OrderedDict()
+        self._role_alignments = OrderedDict()
         self._tokens = tokens
 
         self.nodes = defaultdict(lambda: {'address': None,
@@ -422,10 +422,10 @@ class AMR(DependencyGraph):
         return dict(self._v2c)
 
     def alignments(self):
-        return dict(self._alignments)
+        return self._alignments
 
     def role_alignments(self):
-        return dict(self._role_alignments)
+        return self._role_alignments
 
     def tokens(self):
         return self._tokens
