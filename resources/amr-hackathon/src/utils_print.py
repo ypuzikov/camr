@@ -119,29 +119,42 @@ class AMRPrinter(object):
 
         relations = []
         children_cnts = {}
+        constant_node_unique_id = 0
 
         # for each triple
         for parent, rel, child in triples:
+            assert type(parent) == Var
+
             # skipping the one which sets a relation between a Var and Concept
             if rel == ':instance-of':
                 continue
 
-            # check if the child node is not in the gorn_address map already
+            child_type = type(child)
+            # check if the child node is a Var and is in the gorn_address map already
             # if it is, we need to skip -- this means we have reentrance situation
-            if child not in gorn_address:
-                relations.append((parent, rel, child))
-                children_cnts[parent] = children_cnts.get(parent,-1) + 1
+            if child_type == Var:
+                key = child
+                if key in gorn_address:
+                    continue
+            else:
+                constant_node_unique_id += 1
+                key = constant_node_unique_id
 
-                # to assign a Gorn address to a node, two things are needed:
-                # 1) Gorn address of the parent node
-                # 2) number of siblings processed so far
-                parent_id = gorn_address[parent].id
-                child_address = "%s.%d" % (parent_id, children_cnts[parent])
+            relations.append((parent, rel, key))
+            children_cnts[parent] = children_cnts.get(parent,-1) + 1
 
-                # add the child node to the Gorn address map
-                child_concept = self.get_node_concept(child, amr_graph)
-                child_alignment = self.get_alignment_from_concept(child_concept, alignments)
-                gorn_address[child] = AMRNode(child_address, child_concept, *child_alignment)
+            # to assign a Gorn address to a node, two things are needed:
+            # 1) Gorn address of the parent node
+            # 2) number of siblings processed so far
+            parent_id = gorn_address[parent].id
+            child_address = "%s.%d" % (parent_id, children_cnts[parent])
+
+            # add the child node to the Gorn address map
+            child_concept = self.get_node_concept(child, amr_graph)
+            child_alignment = self.get_alignment_from_concept(child_concept, alignments)
+
+
+            gorn_address[key] = AMRNode(child_address, child_concept, *child_alignment)
 
         return gorn_address, relations
 

@@ -5,7 +5,7 @@ from utils_print import AMRPrinter
 class AMRPrinterTest(AMRPrinter):
 
     def __init__(self):
-        self.amrstring = """(e / establish-01~e.0 :arg1 (m / model~e.1 :mod (i / innovate-01~e.4 :arg1 (i2 / industry~e.3))))"""
+        self.amrstring = """(m / multi-sentence~e.10 :snt1~e.10 (i / intense~e.4 :mode interrogative~e.4 :degree (t / too~e.3) :domain (a / article~e.2)) :snt2 (g / good~e.11 :mode interrogative~e.4 :degree (s / so~e.10) :domain (c / country :name (n / name :op1 "united"~e.8 :op2 "states"~e.9))))"""
 
     # Test functions
     # Not proper tests, just printing routines that allow to observe the results
