@@ -24,7 +24,7 @@ class AMRPrinterTest(AMRPrinter):
 
     def print_test_output(self):
 
-        print('AMR instance:%s\n' % self.amrstring)
+        print('AMR instance:\n%s\n' % AMR(self.amrstring))
 
         print('Alignment line:\n%s\n' % self.test_get_amr_alignment_string(self.amrstring))
 

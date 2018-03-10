@@ -159,9 +159,11 @@ class AMRPrinter(object):
         return gorn_address, relations
 
     @staticmethod
-    def gen_amr_alignment_string(gorn_addr):
+    def gen_amr_alignment_string_token_per_node(gorn_addr):
         """
         A pretty-print method which outputs a ':: alignment ...' line similar to JAMR Aligner.
+        Treats alignment for each node as independent -- does not collapse nodes having same alignment.
+
         Example:
 
         JAMR:
@@ -175,8 +177,40 @@ class AMRPrinter(object):
         alignment_info = " ".join(["%s-%s|%s" % (nodeinfo.start,
                                                  nodeinfo.end,
                                                  nodeinfo.id) if nodeinfo.start else ''
-                                   for node, nodeinfo in gorn_addr.items()]
-                                  )
+                                   for node, nodeinfo in gorn_addr.items()])
+
+        alignment_str = '# ::alignments %s ::annotator GornMap-ISIAligner' % alignment_info
+
+        return alignment_str
+
+    @staticmethod
+    def gen_amr_alignment_string(gorn_addr):
+        """
+        A pretty-print method which outputs a ':: alignment ...' line similar to JAMR Aligner.
+        Collapses nodes having same alignment.
+
+        Example:
+
+        JAMR:
+        # ::alignments 2-3|0.0+0.0.0 6-7|0.0.2+0.0.2.0 5-6|0.0.2.1 4-5|0.0.2.0.0 1-2|0.0.1 ::annotator Aligner v.02 ::date 2017-01-06T12:19:48.98
+
+        Output:
+        # ::alignments 2-3|0.0+0.0.0 6-7|0.0.2+0.0.2.0 5-6|0.0.2.1 4-5|0.0.2.0.0 1-2|0.0.1 ::annotator GornMap-ISIAligner
+
+        """
+
+        # find which nodes have the same alignment
+        tok2id = {}
+        for node, nodeinfo in gorn_addr.items():
+            if nodeinfo.start:
+                # cast the start to int
+                tok2id.setdefault(int(nodeinfo.start), []).append(nodeinfo.id)
+
+
+        alignment_info = " ".join(["%d-%s|%s" % (start,
+                                                 start + 1,
+                                                 '+'.join(v))
+                                   for start, v in tok2id.items()])
 
         alignment_str = '# ::alignments %s ::annotator GornMap-ISIAligner' % alignment_info
 
@@ -209,9 +243,7 @@ class AMRPrinter(object):
                                                'edge': [],
                                                })
 
-        # 1. get node info and the alignment line
-        alignments = []
-
+        # 1. get node info
         for node, nodeinfo in gorn_addr.items():
             # ::node        id       concept    start-end
             node_str = '# ::node\t%s\t%s\t%s' % (nodeinfo.id,
@@ -221,13 +253,8 @@ class AMRPrinter(object):
             # store a node line
             node_edge_root_str_dict['node'].append(node_str)
 
-            # store alignment info
-            if nodeinfo.start:
-                alignments.append("%s-%s|%s" % (nodeinfo.start, nodeinfo.end, nodeinfo.id))
-
         # store the alignment line in the dictionary
-        alignment_info = " ".join(alignments)
-        alignment_str = '# ::alignments %s ::annotator GornMap-ISIAligner' % alignment_info
+        alignment_str = AMRPrinter.gen_amr_alignment_string(gorn_addr)
         node_edge_root_str_dict['alignment'] = alignment_str
 
         # 2. get root string
