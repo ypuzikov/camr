@@ -19,7 +19,7 @@ class AMRPrinter(object):
         Use an AMR object to generate a dictionary of the following format:
 
         - key: concept
-        - value: (start, end) tuple
+        - value: [(start, end), (start, end), ...]
         """
 
         concept_tokid_pairs = OrderedDict()
@@ -62,7 +62,7 @@ class AMRPrinter(object):
     def get_alignment_from_concept(self, concept, alignments_dict):
         """
         Given an AMR concept and a dictionary with concepts as keys and lists of spans as values,
-        retrieve the span. Considers the cases where the
+        retrieve the span.
         :param concept: AMR concept
         :param alignments_dict: a dictionary with mappings: concept -> [(start,end), (start, end), ...]
         :return: a tuple of the form (start, end), both being strings.
@@ -95,8 +95,11 @@ class AMRPrinter(object):
         Main method which generates a Gorn address map for an amr.AMR object.
         Returns a dictionary of the form:
 
-        key = amr.Var || AMRConstant || AMRString || AMRNumber
+        key = amr.Var || constant_node_unique_id
         value = AMRNode named tuple: (gord_addr_id, concept, (start_token, end_token))
+
+        The 'constant_node_unique_id' thing is an ugly workaround to handle the inconsistent treatment of
+        different types of AMR nodes in the amr-hackathon lib.
 
         Note that ISI alignments are token-based, so splitting alignment to 'start' and 'end'
         does not make sense in general. However, we want to make them compatible with
@@ -137,6 +140,9 @@ class AMRPrinter(object):
                 if key in gorn_address:
                     continue
             else:
+                # increment the counter (also unique ID) for a concept AMR node
+                # this is needed because otherwise we might encounter a situation when 2 different concept nodes
+                # are mapped to the same key (problem with __eq__ and __hash__ methods of the amr.Concept() object)
                 constant_node_unique_id += 1
                 key = constant_node_unique_id
 
@@ -159,7 +165,7 @@ class AMRPrinter(object):
         return gorn_address, relations
 
     @staticmethod
-    def gen_amr_alignment_string_token_per_node(gorn_addr):
+    def gen_amr_alignment_string(gorn_addr):
         """
         A pretty-print method which outputs a ':: alignment ...' line similar to JAMR Aligner.
         Treats alignment for each node as independent -- does not collapse nodes having same alignment.
@@ -183,8 +189,9 @@ class AMRPrinter(object):
 
         return alignment_str
 
+    # TODO: experiment and integrate, if needed
     @staticmethod
-    def gen_amr_alignment_string(gorn_addr):
+    def gen_amr_alignment_string_collapse(gorn_addr):
         """
         A pretty-print method which outputs a ':: alignment ...' line similar to JAMR Aligner.
         Collapses nodes having same alignment.
