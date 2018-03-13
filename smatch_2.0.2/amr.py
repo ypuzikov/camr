@@ -214,7 +214,7 @@ class AMR(object):
                 if state == 2:
                     # in this state, current relation name should be empty
                     if cur_relation_name != "":
-                        logging.error("Format error when processing ", line[0:i+1])
+                        logging.error("Format error when processing line: %s", line[0:i+1])
                         return None
                     # update current relation name for future use
                     cur_relation_name = "".join(cur_charseq).strip()
@@ -249,7 +249,7 @@ class AMR(object):
                     cur_charseq[:] = []
                     parts = temp_attr_value.split()
                     if len(parts) < 2:
-                        logging.error("Error in processing; part len < 2", line[0:i+1])
+                        logging.error("Error in processing; part len < 2: %s", line[0:i+1])
                         return None
                     # For the above example, node name is "op1", and node value is "w"
                     # Note that this node name might not be encountered before
@@ -258,7 +258,8 @@ class AMR(object):
                     # We need to link upper level node to the current
                     # top of stack is upper level node
                     if len(stack) == 0:
-                        logging.error("Error in processing", line[:i], relation_name, relation_value)
+                        logging.error("Error in processing line: %s", line[:i])
+                        logging.error("Relation/value: %s/%s", relation_name, relation_value)
                         return None
                     # if we have not seen this node name before
                     if relation_value not in node_dict:
@@ -279,7 +280,7 @@ class AMR(object):
                     cur_charseq[:] = []
                     # if this node name is already in node_dict, it is duplicate
                     if node_name in node_dict:
-                        logging.error("Duplicate node name ", node_name, " in parsing AMR")
+                        logging.error("Duplicate node name (%s) in parsing AMR", node_name)
                         return None
                     # push the node name to stack
                     stack.append(node_name)
@@ -306,7 +307,7 @@ class AMR(object):
                         cur_relation_name = ""
                 else:
                     # error if in other state
-                    logging.error("Error in parsing AMR", line[0:i+1])
+                    logging.error("Error in parsing AMR line: %s", line[0:i+1])
                     return None
                 state = 3
             elif c == ")":
@@ -315,7 +316,7 @@ class AMR(object):
                     continue
                 # stack should be non-empty to find upper level node
                 if len(stack) == 0:
-                    logging.error("Unmatched parenthesis at position", i, "in processing", line[0:i+1])
+                    logging.error("Unmatched parenthesis at position %d in processing line: %s", i, line[0:i+1])
                     return None
                 # Last significant symbol is ":". Now we encounter ")"
                 # Example:
@@ -326,7 +327,8 @@ class AMR(object):
                     cur_charseq[:] = []
                     parts = temp_attr_value.split()
                     if len(parts) < 2:
-                        logging.error("Error processing", line[:i+1], temp_attr_value)
+                        logging.error("Error processing line: %s", line[:i+1])
+                        logging.error("Temprorary attr value: %s", temp_attr_value)
                         return None
                     relation_name = parts[0].strip()
                     relation_value = parts[1].strip()
@@ -364,7 +366,7 @@ class AMR(object):
         attribute_list = []
         for v in node_name_list:
             if v not in node_dict:
-                logging.error("Error: Node name not found", v)
+                logging.error("Error: Node name not found: %s", v)
                 return None
             else:
                 node_value_list.append(node_dict[v])
@@ -396,7 +398,6 @@ class AMR(object):
 # test AMR parsing
 # a unittest can also be used.
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.CRITICAL)
     if len(sys.argv) < 2:
         logging.critical("No file given")
         exit(1)

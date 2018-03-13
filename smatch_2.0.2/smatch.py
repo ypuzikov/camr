@@ -11,6 +11,7 @@ import amr
 import os
 import random
 import sys
+import logging
 import time
 
 # total number of iteration in smatch computation
@@ -803,6 +804,9 @@ def main(arguments):
     args.f[1].close()
 
 if __name__ == "__main__":
+    # suppress all warning except critical ones
+    # needed because default CAMR implementation uses stdout for extracting scores
+    logging.basicConfig(level=logging.CRITICAL)
     parser = None
     args = None
     # only support python version 2.5 or later
