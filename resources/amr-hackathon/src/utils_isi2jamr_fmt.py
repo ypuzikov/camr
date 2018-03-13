@@ -2,6 +2,7 @@ import codecs
 import logging
 import re
 import argparse
+import shutil
 from collections import OrderedDict
 
 from amr import AMR, AMRError
@@ -185,3 +186,11 @@ if __name__ == '__main__':
         printer.write_alignment_basic(comments, amrs, output_file)
     else:
         printer.write_alignment_full(comments, amrs, output_file)
+
+    # since CAMR needs two more files which in our case are duplicates,
+    # we copy them right away
+    duplicate_amrtok_output_fname = '%s.amr.tok' % output_file
+    duplicate_amrtokaligned_output_fname = '%s.amr.tok.aligned' % output_file
+
+    shutil.copyfile(output_file, duplicate_amrtok_output_fname)
+    shutil.copyfile(output_file, duplicate_amrtokaligned_output_fname)
